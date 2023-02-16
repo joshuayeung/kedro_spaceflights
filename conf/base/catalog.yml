@@ -4,36 +4,76 @@
 # Link: https://kedro.readthedocs.io/en/stable/data/data_catalog.html
 companies:
   type: pandas.CSVDataSet
-  filepath: data/01_raw/companies.csv
+  filepath: ${s3.bucket}/data/01_raw/companies.csv
 
 reviews:
   type: pandas.CSVDataSet
-  filepath: data/01_raw/reviews.csv
+  filepath: ${s3.bucket}/data/01_raw/reviews.csv
 
 shuttles:
   type: pandas.ExcelDataSet
-  filepath: data/01_raw/shuttles.xlsx
+  filepath: ${s3.bucket}/data/01_raw/shuttles.xlsx
   load_args:
     engine: openpyxl # Use modern Excel engine (the default since Kedro 0.18.0)
 
 preprocessed_companies:
   type: pandas.ParquetDataSet
-  filepath: data/02_intermediate/preprocessed_companies.pq
+  filepath: ${s3.bucket}/data/02_intermediate/preprocessed_companies.pq
 
 preprocessed_shuttles:
   type: pandas.ParquetDataSet
-  filepath: data/02_intermediate/preprocessed_shuttles.pq
+  filepath: ${s3.bucket}/data/02_intermediate/preprocessed_shuttles.pq
 
 model_input_table:
   type: pandas.ParquetDataSet
-  filepath: data/03_primary/model_input_table.pq
+  filepath: ${s3.bucket}/data/03_primary/model_input_table.pq
 
 active_modelling_pipeline.regressor:
   type: pickle.PickleDataSet
-  filepath: data/06_models/regressor_active.pickle
+  filepath: ${s3.bucket}/data/06_models/regressor_active.pickle
   versioned: true
 
 candidate_modelling_pipeline.regressor:
   type: pickle.PickleDataSet
-  filepath: data/06_models/regressor_candidate.pickle
+  filepath: ${s3.bucket}/data/06_models/regressor_candidate.pickle
+  versioned: true
+
+active_modelling_pipeline.X_train:
+  type: pickle.PickleDataSet
+  filepath: ${s3.bucket}/data/05_model_input/X_train_active.pq
+  versioned: true
+
+candidate_modelling_pipeline.X_train:
+  type: pickle.PickleDataSet
+  filepath: ${s3.bucket}/data/05_model_input/X_train_candidate.pq
+  versioned: true
+
+active_modelling_pipeline.X_test:
+  type: pickle.PickleDataSet
+  filepath: ${s3.bucket}/data/05_model_input/X_test_active.pq
+  versioned: true
+
+candidate_modelling_pipeline.X_test:
+  type: pickle.PickleDataSet
+  filepath: ${s3.bucket}/data/05_model_input/X_test_candidate.pq
+  versioned: true
+
+active_modelling_pipeline.y_train:
+  type: pickle.PickleDataSet
+  filepath: ${s3.bucket}/data/05_model_input/y_train_active.pq
+  versioned: true
+
+candidate_modelling_pipeline.y_train:
+  type: pickle.PickleDataSet
+  filepath: ${s3.bucket}/data/05_model_input/y_train_candidate.pq
+  versioned: true
+
+active_modelling_pipeline.y_test:
+  type: pickle.PickleDataSet
+  filepath: ${s3.bucket}/data/05_model_input/y_test_active.pq
+  versioned: true
+
+candidate_modelling_pipeline.y_test:
+  type: pickle.PickleDataSet
+  filepath: ${s3.bucket}/data/05_model_input/y_test_candidate.pq
   versioned: true

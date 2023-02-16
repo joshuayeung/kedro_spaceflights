@@ -1,0 +1,106 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: spaceflights-
+spec:
+  entrypoint: dag
+  templates:
+  - name: kedro
+    metadata:
+      labels:
+        app: kedro-argo
+    retryStrategy:
+      limit: 1
+    inputs:
+      parameters:
+      - name: kedro_node
+    container:
+      imagePullPolicy: Always
+      image: joshuayeung/kedro_spaceflights
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-secrets
+              key: access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-secrets
+              key: secret_access_key
+      command: [kedro]
+      args: ["run", "-n",  "{{inputs.parameters.kedro_node}}"]
+  - name: dag
+    dag:
+      tasks:
+      - name: preprocess-companies-node
+        template: kedro
+        arguments:
+          parameters:
+          - name: kedro_node
+            value: preprocess_companies_node
+      - name: active-modelling-pipeline-train-model-node
+        template: kedro
+        dependencies:
+          - active-modelling-pipeline-split-data-node
+        arguments:
+          parameters:
+          - name: kedro_node
+            value: active_modelling_pipeline.train_model_node
+      - name: candidate-modelling-pipeline-train-model-node
+        template: kedro
+        dependencies:
+          - candidate-modelling-pipeline-split-data-node
+        arguments:
+          parameters:
+          - name: kedro_node
+            value: candidate_modelling_pipeline.train_model_node
+      - name: active-modelling-pipeline-evaluate-model-node
+        template: kedro
+        dependencies:
+          - active-modelling-pipeline-split-data-node
+          - active-modelling-pipeline-train-model-node
+        arguments:
+          parameters:
+          - name: kedro_node
+            value: active_modelling_pipeline.evaluate_model_node
+      - name: active-modelling-pipeline-split-data-node
+        template: kedro
+        dependencies:
+          - create-model-input-table-node
+        arguments:
+          parameters:
+          - name: kedro_node
+            value: active_modelling_pipeline.split_data_node
+      - name: preprocess-shuttles-node
+        template: kedro
+        arguments:
+          parameters:
+          - name: kedro_node
+            value: preprocess_shuttles_node
+      - name: candidate-modelling-pipeline-evaluate-model-node
+        template: kedro
+        dependencies:
+          - candidate-modelling-pipeline-split-data-node
+          - candidate-modelling-pipeline-train-model-node
+        arguments:
+          parameters:
+          - name: kedro_node
+            value: candidate_modelling_pipeline.evaluate_model_node
+      - name: create-model-input-table-node
+        template: kedro
+        dependencies:
+          - preprocess-companies-node
+          - preprocess-shuttles-node
+        arguments:
+          parameters:
+          - name: kedro_node
+            value: create_model_input_table_node
+      - name: candidate-modelling-pipeline-split-data-node
+        template: kedro
+        dependencies:
+          - create-model-input-table-node
+        arguments:
+          parameters:
+          - name: kedro_node
+            value: candidate_modelling_pipeline.split_data_node
